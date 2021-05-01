@@ -1,0 +1,5 @@
+.DS_Store
+node_modules
+.editorconfig
+public/js
+public/css
