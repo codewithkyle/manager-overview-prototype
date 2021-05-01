@@ -4,14 +4,12 @@ Exploring the concept of creating a web application using an offline-first CRDT 
 
 ## Roadmap
 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
+- [ ] Create initial UI
+- [ ] Add task to a team member
+- [ ] Set task due date
+- [ ] Set task estimated hours
+- [ ] Automatically order tasks by due date -- showcase tasks due today (green) and overdue tasks (red)
+- [ ] Delete tasks
 
 ## Postmortem
 
