@@ -19,11 +19,11 @@ overflow-button {
         transition: all 150ms var(--ease-in-out);
         user-select: none;
         cursor: pointer;
-        color: var(--grey-700);
+        color: var(--neutral-100);
 
         &:hover,
         &:focus-visible {
-            color: var(--grey-800);
+            color: var(--white);
 
             &::before {
                 opacity: 0.1;
@@ -31,7 +31,7 @@ overflow-button {
         }
 
         &:active {
-            color: var(--grey-800);
+            color: var(--white);
 
             &::before {
                 opacity: 0.2;

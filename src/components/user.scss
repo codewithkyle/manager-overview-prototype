@@ -1,0 +1,99 @@
+user-component{
+    padding: 1rem;
+    padding-top: calc(96px / 2);
+    display: block;
+    background-color: var(--neutral-800);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    border: 1px solid var(--neutral-700);
+    margin-top: calc(106px / 2);
+    flex-shrink: 0;
+
+    &::before{
+        content: "";
+        display: inline-block;
+        position: absolute;
+        top: calc(108px / 2 * -1);
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(96px + 10px);
+        height: calc(96px + 10px);
+        background-color: var(--neutral-800);
+        border-radius: 50%;
+        border: 1px solid var(--neutral-700);
+        z-index: -1;
+    }
+
+    .avatar{
+        position: absolute;
+        top: calc(106px / 2 * -1);
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(96px + 8px);
+        height: calc(96px + 8px);
+        background-color: var(--neutral-800);
+        border-radius: 50%;
+        overflow: hidden;
+
+        &::after{
+            content: "";
+            display: inline-block;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.15);
+        }
+
+        img{
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+        }
+    }
+
+    h2{
+        display: block;
+        width: 100%;
+        font-size: var(--font-xl);
+        font-weight: var(--font-medium);
+        text-align: center;
+        line-height: 1.375;
+        margin: 1rem 0 1.5rem;
+    }
+
+    .task-list{
+        display: block;
+        width: 100%;
+        max-height: calc(36px * 12 + 36px / 2);
+        overflow-y: auto;
+
+        task-component{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 36px;
+            line-height: 36px;
+            white-space: nowrap;
+            background-color: var(--neutral-700);
+            border: 1px solid var(--neutral-600);
+            border-radius: 0.25rem;
+
+            input{
+                width: 100%;
+                flex: 1;
+                height: 100%;
+                line-height: 1;
+                padding: 0 1rem;
+                text-overflow: ellipsis;
+            }
+        }
+    }
+}
