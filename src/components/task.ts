@@ -1,14 +1,15 @@
 import { html, render } from "lit-html";
 import SuperComponet from "@codewithkyle/supercomponent";
 import type { ITask } from "../types/user";
+import cc from "../controllers/control-center";
 
 export default class Task extends SuperComponet<ITask>{
-    private lastKey: string;
+    private tabDown: boolean;
 
     constructor(task:ITask, uid){
         super();
         this.model = task;
-        this.lastKey = "";
+        this.tabDown = false;
         this.render();
     }
 
@@ -16,18 +17,42 @@ export default class Task extends SuperComponet<ITask>{
         // TODO: debounce & update
     }
 
-    private handleKeypress = (e:KeyboardEvent) => {
+    private handleKeydown = async (e:KeyboardEvent) => {
         if (e instanceof KeyboardEvent){
             const key = e.key.toLowerCase();
-            console.log(key);
-            // TODO: if key = backspace && lastKey = tab delete the task
-            this.lastKey = key;
+            switch (key){
+                case "tab":
+                    e.preventDefault();
+                    this.tabDown = true;
+                    break;
+                default:
+                    break;
+            }
+            if (this.tabDown && key === "backspace"){
+                const op = await cc.delete("tasks", this.model.uid);
+                await cc.perform(op);
+                cc.disbatch(op);
+                this.remove();
+            }
+        }
+    }
+
+    private handleKeyup = (e:KeyboardEvent) => {
+        if (e instanceof KeyboardEvent){
+            const key = e.key.toLowerCase();
+            switch (key){
+                case "tab":
+                    this.tabDown = false;
+                    break;
+                default:
+                    return;
+            }
         }
     }
 
     render(){
         const view = html`
-            <input @keypress=${this.handleKeypress} @input=${this.handleTextInput} type="text" .value="${this.model.text}" title="${this.model.text}">
+            <input @keyup=${this.handleKeyup} @keydown=${this.handleKeydown} @input=${this.handleTextInput} type="text" .value="${this.model.text}" title="${this.model.text}">
         `;
         render(view, this);
     }

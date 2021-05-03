@@ -12,7 +12,7 @@ Exploring the concept of creating a web application using an offline-first CRDT 
     - [ ] Locally
     - [ ] Globally
 - [ ] Delete tasks
-    - [ ] Locally
+    - [x] Locally
     - [ ] Globally
 
 ## Postmortem

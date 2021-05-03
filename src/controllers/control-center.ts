@@ -1,8 +1,9 @@
 import { v4 as uuid } from "uuid";
-import { Insert, OPCode } from "../types/ops";
+import { Delete, Insert, OPCode } from "../types/ops";
 import idb from "./idb-manager";
 
 class ControlCenter {
+
     public insert(table:string, key:string, value:any):Insert{
         return {
             id: uuid(),
@@ -10,6 +11,23 @@ class ControlCenter {
             table: table,
             key: key,
             value: value,
+            timestamp: new Date().getTime(),
+        };
+    }
+
+    public async delete(table:string, key:string):Promise<Delete>{
+        const value = await new Promise(resolve => {
+            idb.send("GET", {
+                table: table,
+                key: key,
+            }, resolve);
+        });
+        return {
+            id: uuid(),
+            op: "DELETE",
+            table: table,
+            key: key,
+            tombstone: value,
             timestamp: new Date().getTime(),
         };
     }
