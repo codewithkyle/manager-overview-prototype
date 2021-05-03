@@ -23,7 +23,7 @@ export interface Set extends OPCode{
 
 export interface Unset extends OPCode{
     keypath: string,
-    value: any,
+    tombstone: any,
 }
 
 export interface Batch{

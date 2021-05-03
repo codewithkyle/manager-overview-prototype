@@ -55,7 +55,7 @@ export default class User extends SuperComponet<IUser>{
             <h2>${this.model.name}</h2>
             <div class="task-list">
                 ${Object.keys(this.model.tasks).length ? Object.keys(this.model.tasks).map(uid => {
-                    return new Task(this.model.tasks[uid], uid);
+                    return new Task(this.model.tasks[uid]);
                 }) : html`<p class="w-full block text-center font-sm line-normal mb-0.5">${this.model.name} doens't have any tasks.</p>`}
             </div>
             <button class="bttn w-full mt-1" shape="rounded" kind="solid" color="success" @click=${this.createTask}>Create Task</button>

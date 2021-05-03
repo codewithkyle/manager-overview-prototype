@@ -2,19 +2,28 @@ import { html, render } from "lit-html";
 import SuperComponet from "@codewithkyle/supercomponent";
 import type { ITask } from "../types/user";
 import cc from "../controllers/control-center";
+import debounce from "../utils/debounce";
 
 export default class Task extends SuperComponet<ITask>{
     private tabDown: boolean;
 
-    constructor(task:ITask, uid){
+    constructor(task:ITask){
         super();
         this.model = task;
         this.tabDown = false;
         this.render();
     }
 
+    private async updateText(target:HTMLInputElement){
+        const value = target.value;
+        const op = await cc.set("tasks", this.model.uid, `text`, value);
+        await cc.perform(op);
+        cc.disbatch(op);
+    }
+    private debounceTextInput = debounce(this.updateText.bind(this), 600, false);
     private handleTextInput: EventListener = (e:Event) => {
-        // TODO: debounce & update
+        const target = e.currentTarget as HTMLInputElement;
+        this.debounceTextInput(target);
     }
 
     private handleKeydown = async (e:KeyboardEvent) => {

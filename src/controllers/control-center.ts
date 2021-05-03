@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { Delete, Insert, OPCode } from "../types/ops";
+import { Delete, Insert, OPCode, Set, Unset } from "../types/ops";
 import idb from "./idb-manager";
 
 class ControlCenter {
@@ -28,6 +28,31 @@ class ControlCenter {
             table: table,
             key: key,
             tombstone: value,
+            timestamp: new Date().getTime(),
+        };
+    }
+
+    public set(table:string, key:string, keypath:string, value:any):Set{
+        return {
+            id: uuid(),
+            op: "SET",
+            table: table,
+            key: key,
+            keypath: keypath,
+            value: value,
+            timestamp: new Date().getTime(),
+        };
+    }
+
+    public unset(table:string, key:string, keypath:string):Unset{
+        // TODO: find tombstone value via keypath
+        return {
+            id: uuid(),
+            op: "UNSET",
+            table: table,
+            key: key,
+            keypath: keypath,
+            tombstone: null,
             timestamp: new Date().getTime(),
         };
     }
