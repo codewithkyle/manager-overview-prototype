@@ -6,10 +6,14 @@ Exploring the concept of creating a web application using an offline-first CRDT 
 
 - [x] Create initial UI
 - [ ] Add task to a team member
-- [ ] Set task due date
-- [ ] Set task estimated hours
-- [ ] Automatically order tasks by due date -- showcase tasks due today (green) and overdue tasks (red)
+    - [x] Locally
+    - [ ] Globally via CRDTs
+- [ ] Update task text
+    - [ ] Locally
+    - [ ] Globally via CRDTs
 - [ ] Delete tasks
+    - [ ] Locally
+    - [ ] Globally via CRDTs
 
 ## Postmortem
 
