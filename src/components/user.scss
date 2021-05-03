@@ -9,6 +9,7 @@ user-component{
     border: 1px solid var(--neutral-700);
     margin-top: calc(106px / 2);
     flex-shrink: 0;
+    margin-bottom: auto;
 
     &::before{
         content: "";
@@ -84,7 +85,18 @@ user-component{
             white-space: nowrap;
             background-color: var(--neutral-700);
             border: 1px solid var(--neutral-600);
-            border-radius: 0.25rem;
+
+            &:first-of-type{
+                border-radius: 0.25rem 0.25rem 0 0;
+            }
+
+            &:last-of-type{
+                border-radius: 0 0 0.25rem 0.25rem;
+            }
+
+            &:only-of-type{
+                border-radius: 0.25rem;
+            }
 
             input{
                 width: 100%;

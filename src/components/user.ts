@@ -1,8 +1,9 @@
 import { html, render } from "lit-html";
 import SuperComponet from "@codewithkyle/supercomponent";
-import type { IUser } from "../types/user";
+import type { ITask, IUser } from "../types/user";
 import { v4 as uuid } from "uuid";
 import cc from "../controllers/control-center";
+import idb from "../controllers/idb-manager";
 
 import Task from "./task";
 customElements.define("task-component", Task);
@@ -11,10 +12,26 @@ export default class User extends SuperComponet<IUser>{
     constructor(user:IUser){
         super();
         this.model = user;
-        this.render();
+        this.loadTasks();
     }
 
-    private createTask:EventListener = () => {
+    private async loadTasks(){
+        const tasks:Array<ITask> = await new Promise(resolve => {
+            idb.send("FIND", {
+                table: "tasks",
+                index: "user",
+                value: this.model.uid,
+            }, resolve);
+        });
+        const updated = {...this.model};
+        for (let i = 0; i < tasks.length; i++){
+            const task = tasks[i];
+            updated.tasks[task.uid] = task;
+        }
+        this.update(updated);
+    }
+
+    private createTask:EventListener = async () => {
         const text = prompt("What's the task?");
         if (!text){
             return;
@@ -25,8 +42,9 @@ export default class User extends SuperComponet<IUser>{
             user: this.model.uid,
             text: text,
         });
-        cc.perform(op);
+        await cc.perform(op);
         cc.disbatch(op);
+        this.loadTasks();
     }
 
     render(){

@@ -31,6 +31,11 @@ class IDBWorker {
     private inbox(e:MessageEvent){
         const { type, uid, data } = e.data;
         switch (type){
+            case "FIND":
+                this.find(data).then(output => {
+                    this.send("response", output, uid);
+                });
+                break;
             case "UNSET":
                 this.unset(data).then(() => {
                     this.send("response", null, uid);
@@ -136,6 +141,11 @@ class IDBWorker {
 
     private async get({ table, key }){
         const data = await this.db.get(table, key);
+        return data;
+    }
+
+    private async find({ table, index, value }){
+        const data = await this.db.getAllFromIndex(table, index, value);
         return data;
     }
 

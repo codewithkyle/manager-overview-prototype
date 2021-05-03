@@ -10,4 +10,5 @@ export type IUser = {
 export type ITask = {
     text: string,
     user: string,
+    uid: string,
 };

@@ -36,43 +36,47 @@ class ControlCenter {
     }
 
     public async perform(operation:OPCode){
-        // @ts-ignore
-        const { op, id, table, key, value, keypath } = operation;
-        switch (op){
-            case "INSERT":
-                return new Promise((resolve, reject) => {
-                    idb.send("INSERT", {
-                        table: table,
-                        value: value,
-                    }, resolve, reject);
-                });
-            case "DELETE":
-                return new Promise((resolve, reject) => {
-                    idb.send("DELETE", {
-                        table: table,
-                        key: key,
-                    }, resolve, reject);
-                });
-            case "SET":
-                return new Promise((resolve, reject) => {
-                    idb.send("SET", {
-                        table: table,
-                        key: key,
-                        keypath: keypath,
-                        value: value,
-                    }, resolve, reject);
-                });
-            case "UNSET":
-                return new Promise((resolve, reject) => {
-                    idb.send("UNSET", {
-                        table: table,
-                        key: key,
-                        keypath: keypath,
-                    }, resolve, reject);
-                });
-            default:
-                console.error(`Unknown OP: ${op}`);
-                break;
+        try {
+            // @ts-ignore
+            const { op, id, table, key, value, keypath } = operation;
+            switch (op){
+                case "INSERT":
+                    return new Promise((resolve, reject) => {
+                        idb.send("INSERT", {
+                            table: table,
+                            value: value,
+                        }, resolve, reject);
+                    });
+                case "DELETE":
+                    return new Promise((resolve, reject) => {
+                        idb.send("DELETE", {
+                            table: table,
+                            key: key,
+                        }, resolve, reject);
+                    });
+                case "SET":
+                    return new Promise((resolve, reject) => {
+                        idb.send("SET", {
+                            table: table,
+                            key: key,
+                            keypath: keypath,
+                            value: value,
+                        }, resolve, reject);
+                    });
+                case "UNSET":
+                    return new Promise((resolve, reject) => {
+                        idb.send("UNSET", {
+                            table: table,
+                            key: key,
+                            keypath: keypath,
+                        }, resolve, reject);
+                    });
+                default:
+                    console.error(`Unknown OP: ${op}`);
+                    break;
+            }
+        } catch (e) {
+            console.error(e);
         }
     }
 }

@@ -19,11 +19,7 @@ export default class Homepage extends SuperComponet<HomepageState>{
                     uid: "52f6cbc7-bb02-4e7f-98e8-86117255b3f8",
                     name: "Mark Wheeler",
                     avatar: "/images/mark-wheeler.jpg",
-                    tasks: {
-                        "04a3d012-61de-49a5-9683-b60be7f11101": {
-                            text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-                        }
-                    },
+                    tasks: {},
                 },
                 "09e27742-e186-4eca-946a-a1464e4da139": {
                     uid: "09e27742-e186-4eca-946a-a1464e4da139",
