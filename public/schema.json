@@ -35,6 +35,37 @@
 					"key": "user"
 				}
 			]
+		},
+        {
+			"name": "crdt-operations",
+			"keyPath": "id",
+			"columns": [
+				{
+					"key": "id",
+					"unique": true
+				},
+				{
+					"key": "op"
+				},
+                {
+					"key": "timestamp"
+				},
+                {
+					"key": "table"
+				},
+                {
+					"key": "key"
+				},
+                {
+					"key": "keypath"
+				},
+                {
+					"key": "value"
+				},
+                {
+					"key": "tombstone"
+				}
+			]
 		}
 	]
 }

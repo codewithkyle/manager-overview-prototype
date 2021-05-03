@@ -7,13 +7,13 @@ Exploring the concept of creating a web application using an offline-first CRDT 
 - [x] Create initial UI
 - [ ] Add task to a team member
     - [x] Locally
-    - [ ] Globally via CRDTs
+    - [ ] Globally
 - [ ] Update task text
     - [ ] Locally
-    - [ ] Globally via CRDTs
+    - [ ] Globally
 - [ ] Delete tasks
     - [ ] Locally
-    - [ ] Globally via CRDTs
+    - [ ] Globally
 
 ## Postmortem
 
