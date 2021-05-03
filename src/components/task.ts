@@ -41,6 +41,7 @@ export default class Task extends SuperComponet<ITask>{
                 const op = await cc.delete("tasks", this.model.uid);
                 await cc.perform(op);
                 cc.disbatch(op);
+                // TODO: inform parent that a child was removed
                 this.remove();
             }
         }
