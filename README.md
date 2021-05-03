@@ -9,7 +9,7 @@ Exploring the concept of creating a web application using an offline-first CRDT 
     - [x] Locally
     - [ ] Globally
 - [ ] Update task text
-    - [ ] Locally
+    - [x] Locally
     - [ ] Globally
 - [ ] Delete tasks
     - [x] Locally
