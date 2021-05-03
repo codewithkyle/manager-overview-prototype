@@ -1,4 +1,5 @@
 export type IUser = {
+    uid: string;
     name: string,
     avatar: string,
     tasks: {
@@ -8,4 +9,5 @@ export type IUser = {
 
 export type ITask = {
     text: string,
+    user: string,
 };

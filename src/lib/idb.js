@@ -265,5 +265,3 @@ replaceTraps((oldTraps) => ({
     get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
     has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop),
 }));
-
-export { deleteDB, openDB, unwrap, wrap };

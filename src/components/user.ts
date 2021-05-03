@@ -1,6 +1,8 @@
 import { html, render } from "lit-html";
 import SuperComponet from "@codewithkyle/supercomponent";
 import type { IUser } from "../types/user";
+import { v4 as uuid } from "uuid";
+import cc from "../controllers/control-center";
 
 import Task from "./task";
 customElements.define("task-component", Task);
@@ -13,10 +15,18 @@ export default class User extends SuperComponet<IUser>{
     }
 
     private createTask:EventListener = () => {
-        const task = prompt("What is the task?");
-        if (!task){
+        const text = prompt("What's the task?");
+        if (!text){
             return;
         }
+        const uid = uuid();
+        const op = cc.insert("tasks", uid, {
+            uid: uid,
+            user: this.model.uid,
+            text: text,
+        });
+        cc.perform(op);
+        cc.disbatch(op);
     }
 
     render(){

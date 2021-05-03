@@ -7,7 +7,6 @@ export default class Task extends SuperComponet<ITask>{
 
     constructor(task:ITask, uid){
         super();
-        console.log(uid);
         this.model = task;
         this.lastKey = "";
         this.render();
