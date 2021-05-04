@@ -4,18 +4,43 @@ import type { ITask, IUser } from "../types/user";
 import { v4 as uuid } from "uuid";
 import cc from "../controllers/control-center";
 import idb from "../controllers/idb-manager";
+import { subscribe, unsubscribe } from "@codewithkyle/pubsub";
 
 import Task from "./task";
 customElements.define("task-component", Task);
 
 export default class User extends SuperComponet<IUser>{
+    private inboxId: string;
+
     constructor(user:IUser){
         super();
         this.model = user;
+        this.inboxId = subscribe("sync", this.inbox.bind(this));
         this.loadTasks();
     }
 
-    private async loadTasks(){
+    private inbox({ op, id, table, key, value, keypath, timestamp }){
+        switch (op){
+            case "DELETE":
+                if (table === "tasks" && key in this.model.tasks){
+                    this.loadTasks();
+                }
+                break;
+            case "INSERT":
+                if (table === "tasks" && value.user === this.model.uid){
+                    this.loadTasks();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    disconnected(){
+        unsubscribe(this.inboxId, "sync");
+    }
+
+    public async loadTasks(){
         const tasks:Array<ITask> = await new Promise(resolve => {
             idb.send("FIND", {
                 table: "tasks",
@@ -24,6 +49,7 @@ export default class User extends SuperComponet<IUser>{
             }, resolve);
         });
         const updated = {...this.model};
+        updated.tasks = {};
         for (let i = 0; i < tasks.length; i++){
             const task = tasks[i];
             updated.tasks[task.uid] = task;

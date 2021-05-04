@@ -1,8 +1,13 @@
 import { v4 as uuid } from "uuid";
 import { Delete, Insert, OPCode, Set, Unset } from "../types/ops";
 import idb from "./idb-manager";
+import { createSubscription, publish } from "@codewithkyle/pubsub";
 
 class ControlCenter {
+
+    constructor(){
+        createSubscription("sync");
+    }
 
     public insert(table:string, key:string, value:any):Insert{
         return {
@@ -78,15 +83,26 @@ class ControlCenter {
         }
     }
 
-    public async perform(operation:OPCode){
+    public async perform(operation:OPCode, disbatchToUI = false){
         try {
             // @ts-ignore
             const { op, id, table, key, value, keypath, timestamp } = operation;
 
+            // Ignore web socket OPs if they originated from this client
+            const alreadyInLedger = await new Promise(resolve => {
+                idb.send("GET", {
+                    table: "ledger",
+                    key: id,
+                }, resolve);
+            });
+            if (alreadyInLedger){
+                return;
+            }
+
             // Insert OP into the ledger
             await new Promise(resolve => {
                 idb.send("INSERT", {
-                    table: "crdt-operations",
+                    table: "ledger",
                     key: id,
                     value: operation,
                 }, resolve);
@@ -95,7 +111,7 @@ class ControlCenter {
             // Get all past operations & select ops to be performed
             const history:Array<OPCode> = await new Promise(resolve => {
                 idb.send("SELECT", {
-                    table: "crdt-operations",
+                    table: "ledger",
                 }, resolve);
             });
             history.sort((a, b) => {
@@ -119,10 +135,33 @@ class ControlCenter {
             // Perform ops
             for (const op of ops){
                 await this.op(op);
+                if (disbatchToUI){
+                    publish("sync", op);
+                }
             }
         } catch (e) {
             console.error(e);
             // TODO: handle desync
+        }
+    }
+
+    public setValueFromKeypath(object, keypath, value){
+        const key = keypath[0];
+        keypath.splice(0, 1);
+        if (keypath.length){
+            this.setValueFromKeypath(object[key], keypath, value);
+        } else {
+            object[key] = value;
+        }
+    }
+    
+    public unsetValueFromKeypath(object, keypath){
+        const key = keypath[0];
+        keypath.splice(0, 1);
+        if (keypath.length){
+            this.unsetValueFromKeypath(object[key], keypath);
+        } else {
+            delete object[key];
         }
     }
 

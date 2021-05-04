@@ -3,15 +3,36 @@ import SuperComponet from "@codewithkyle/supercomponent";
 import type { ITask } from "../types/user";
 import cc from "../controllers/control-center";
 import debounce from "../utils/debounce";
+import { subscribe, unsubscribe } from "@codewithkyle/pubsub";
 
 export default class Task extends SuperComponet<ITask>{
     private tabDown: boolean;
+    private inboxId: string;
 
     constructor(task:ITask){
         super();
         this.model = task;
         this.tabDown = false;
+        this.inboxId = subscribe("sync", this.inbox.bind(this));
         this.render();
+    }
+
+    private inbox({ op, id, table, key, value, keypath, timestamp }){
+        if (key === this.model.uid){
+            switch (op){
+                case "SET":
+                    const updated = {...this.model};
+                    cc.setValueFromKeypath(updated, keypath.split("::"), value);
+                    this.update(updated);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    disconnected(){
+        unsubscribe(this.inboxId, "sync");
     }
 
     private async updateText(target:HTMLInputElement){
@@ -38,11 +59,14 @@ export default class Task extends SuperComponet<ITask>{
                     break;
             }
             if (this.tabDown && key === "backspace"){
+                e.preventDefault();
+                this.updateText = async () => {};
                 const op = await cc.delete("tasks", this.model.uid);
+                console.log(op);
                 await cc.perform(op);
                 cc.disbatch(op);
-                // TODO: inform parent that a child was removed
-                this.remove();
+                // @ts-ignore
+                this.closest("user-component").loadTasks();
             }
         }
     }
