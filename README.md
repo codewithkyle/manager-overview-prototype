@@ -5,15 +5,15 @@ Exploring the concept of creating a web application using an offline-first CRDT 
 ## Roadmap
 
 - [x] Create initial UI
-- [ ] Add task to a team member
+- [x] Add task to a team member
     - [x] Locally
-    - [ ] Globally
-- [ ] Update task text
+    - [x] Globally
+- [x] Update task text
     - [x] Locally
-    - [ ] Globally
-- [ ] Delete tasks
+    - [x] Globally
+- [x] Delete tasks
     - [x] Locally
-    - [ ] Globally
+    - [x] Globally
 - [ ] Finalize offline support
     - [ ] Add repeating network checking logic
     - [ ] Dispatch local changes when network becomes available
