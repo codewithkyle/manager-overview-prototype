@@ -3,6 +3,23 @@ class Database {
         this.users = {};
         this.tasks = {};
     }
+    select(table){
+        const output = [];
+        switch (table){
+            case "users":
+                for (const key in this.users){
+                    output.push(this.users[key]);
+                }
+                return output;
+            case "tasks":
+                for (const key in this.tasks){
+                    output.push(this.tasks[key]);
+                }
+                return output;
+            default:
+                return;
+        } 
+    }
     unset({ op, id, table, key, value, keypath, timestamp }){
         switch (table){
             case "users":

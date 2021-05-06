@@ -2,8 +2,10 @@ const { broadcast } = require("./websockets");
 const db = require("./db");
 const fs = require("fs");
 const path = require("path");
+const uuid = require("uuid").v4;
 
 const ledgerFile = path.join(__dirname, "ledger.ndjson");
+const tempLedgerFile = path.join(__dirname, "ledger.tmp");
 
 class CommandCenter {
     constructor(){
@@ -13,14 +15,17 @@ class CommandCenter {
             fs.unlinkSync(ledgerFile);
         }
         fs.writeFileSync(ledgerFile, "");
+        this.opsSinceLastNormalize = 0;
+        this.normalizing = false;
     }
 
     async op(operation){
         if (operation.id in this.ops){
             return;
         }
+        this.opsSinceLastNormalize++;
         this.ops[operation.id] = 1;
-        await this.logOP(operation);
+        this.logOP(operation);
         const { size, mtimeMs } = await fs.promises.stat(ledgerFile);
         operation.etag = `${size}-${mtimeMs}`;
         broadcast(operation);
@@ -29,15 +34,55 @@ class CommandCenter {
             return a.timestamp - b.timestamp > 0 ? 1 : -1;
         });
         await this.getOPs(operation);
+        if (this.opsSinceLastNormalize >= 100){
+            this.normalize();
+        }
+    }
+
+    async normalize(){
+        this.normalizing = true;
+        this.opsSinceLastNormalize = 0;
+        this.ledger.splice(0, this.ledger.length - 1);
+        if (fs.existsSync(tempLedgerFile)){
+            await fs.promises.unlink(tempLedgerFile);
+        }
+        await fs.promises.writeFile(tempLedgerFile, "");
+        const temp = path.join(__dirname, `${uuid()}.tmp`);
+        await fs.promises.writeFile(temp, "");
+        const stream = fs.createWriteStream(temp, { flags: "a"});
+        const tasks = db.select("tasks");
+        const ops = [];
+        for (let i = 0; i < tasks.length; i++){
+            const task = tasks[i];
+            ops.push({
+                id: uuid(),
+                op: "INSERT",
+                table: "tasks",
+                key: task.uid,
+                value: task,
+                timestamp: 0,
+            });
+        }
+        for (let i = 0; i < ops.length; i++){
+            stream.write(`${JSON.stringify(ops[i])}\n`);
+        }
+        const tempLedgerData = await fs.promises.readFile(tempLedgerFile, "utf-8");
+        stream.write(tempLedgerData);
+        stream.end();
+        this.ledger = [...ops, ...this.ledger];
+        fs.renameSync(temp, ledgerFile);
+        this.normalizing = false;
     }
 
     logOP(operation){
-        return new Promise(resolve => {
-            const stream = fs.createWriteStream(ledgerFile, { flags: 'a' });
-            stream.write(`${JSON.stringify(operation)}\n`, () => {
-                resolve();
-            });
-        })
+        let stream;
+        if (this.normalizing){
+            stream = fs.createWriteStream(tempLedgerFile, { flags: 'a' });
+        } else {
+            stream = fs.createWriteStream(ledgerFile, { flags: 'a' });
+        }
+        stream.write(`${JSON.stringify(operation)}\n`);
+        stream.end();
     }
 
     async getOPs(operation){
