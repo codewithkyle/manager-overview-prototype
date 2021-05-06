@@ -25,7 +25,7 @@ class CommandCenter {
         }
         this.opsSinceLastNormalize++;
         this.ops[operation.id] = 1;
-        this.logOP(operation);
+        await this.logOP(operation);
         const { size, mtimeMs } = await fs.promises.stat(ledgerFile);
         operation.etag = `${size}-${mtimeMs}`;
         broadcast(operation);
@@ -75,14 +75,17 @@ class CommandCenter {
     }
 
     logOP(operation){
-        let stream;
-        if (this.normalizing){
-            stream = fs.createWriteStream(tempLedgerFile, { flags: 'a' });
-        } else {
-            stream = fs.createWriteStream(ledgerFile, { flags: 'a' });
-        }
-        stream.write(`${JSON.stringify(operation)}\n`);
-        stream.end();
+        return new Promise(resolve => {
+            let stream;
+            if (this.normalizing){
+                stream = fs.createWriteStream(tempLedgerFile, { flags: 'a' });
+            } else {
+                stream = fs.createWriteStream(ledgerFile, { flags: 'a' });
+            }
+            stream.write(`${JSON.stringify(operation)}\n`, () => {
+                resolve();
+            });
+        });
     }
 
     async getOPs(operation){

@@ -2,6 +2,7 @@ import cc from "./control-center";
 import { toast } from "@codewithkyle/notifyjs";
 
 let socket;
+let connected = false;
 
 function reconnect(){
     socket = new WebSocket('ws://localhost:5002');
@@ -15,18 +16,22 @@ function reconnect(){
         }
     });
     socket.addEventListener("close", () => {
-        toast({
-            title: "Connection Lost",
-            message: "You've lost your connection with the server. Any new changes you make will not be applied until you've reconnected.",
-            classes: ["-yellow"],
-            closeable: true,
-            duration: Infinity,
-        });
+        if (connected){
+            toast({
+                title: "Connection Lost",
+                message: "You've lost your connection with the server. Any new changes you make will not be applied until you've reconnected.",
+                classes: ["-yellow"],
+                closeable: true,
+                duration: Infinity,
+            });
+            connected = false;
+        }
         setTimeout(() => {
             reconnect();
         }, 30000);
     });
     socket.addEventListener("open", () => {
+        connected = true;
         cc.sync();
     });
 }

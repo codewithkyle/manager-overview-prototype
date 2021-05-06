@@ -51,6 +51,7 @@ class ControlCenter {
             const incomingETag = request.headers.get("ETag");
             const localETag = localStorage.getItem("ledger-etag");
             if (incomingETag !== localETag){
+                console.log(localETag, incomingETag);
                 toast({
                     title: "Synchronization",
                     message: "Your local data is outdated and will be synchronized. You may notice the UI changing or updating while the synchronization is in progress.",
