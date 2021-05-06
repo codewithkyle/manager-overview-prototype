@@ -1,10 +1,18 @@
 const { broadcast } = require("./websockets");
 const db = require("./db");
+const fs = require("fs");
+const path = require("path");
+
+const ledgerFile = path.join(__dirname, "ledger.ndjson");
 
 class CommandCenter {
     constructor(){
         this.ledger = [];
         this.ops = {};
+        if (fs.existsSync(ledgerFile)){
+            fs.unlinkSync(ledgerFile);
+        }
+        fs.writeFileSync(ledgerFile, "");
     }
 
     async op(operation){
@@ -13,11 +21,17 @@ class CommandCenter {
         }
         this.ops[operation.id] = 1;
         broadcast(operation);
+        this.logOP(operation);
         this.ledger.push(operation);
         this.ledger.sort((a, b) => {
             return a.timestamp - b.timestamp > 0 ? 1 : -1;
         });
         await this.getOPs(operation);
+    }
+
+    async logOP(operation){
+        const stream = fs.createWriteStream(ledgerFile, { flags: 'a' });
+        stream.write(`${JSON.stringify(operation)}\n`);
     }
 
     async getOPs(operation){

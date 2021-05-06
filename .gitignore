@@ -3,3 +3,4 @@ node_modules
 .editorconfig
 public/js
 public/css
+server/ledger.ndjson
