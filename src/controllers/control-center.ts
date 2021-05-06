@@ -2,6 +2,7 @@ import { v4 as uuid } from "uuid";
 import { Delete, Insert, OPCode, Set, Unset } from "../types/ops";
 import idb from "./idb-manager";
 import { createSubscription, publish } from "@codewithkyle/pubsub";
+import { toast } from "@codewithkyle/notifyjs";
 
 class ControlCenter {
     private syncing: boolean;
@@ -50,6 +51,12 @@ class ControlCenter {
             const incomingETag = request.headers.get("ETag");
             const localETag = localStorage.getItem("ledger-etag");
             if (incomingETag !== localETag){
+                toast({
+                    title: "Synchronization",
+                    message: "Your local data is outdated and will be synchronized. You may notice the UI changing or updating while the synchronization is in progress.",
+                    classes: ["-yellow"],
+                    closeable: true,
+                });
                 await new Promise(resolve => {
                     idb.send("RESET", null, resolve);
                 });
@@ -110,8 +117,15 @@ class ControlCenter {
         });
         for (const op of ops){
             await this.op(op);
+            publish("sync", op);
         }
-        location.reload();
+        toast({
+            title: "Synchronization Complete",
+            message: "Your local data has been successfully synced with the server.",
+            classes: ["-green"],
+            closeable: true,
+            duration: Infinity,
+        });
     }
 
     public insert(table:string, key:string, value:any):Insert{
@@ -178,7 +192,12 @@ class ControlCenter {
             const response = await request.json();
             if (!request.ok || !response?.success){
                 console.error(response?.error ?? request.statusText);
-                // TODO: inform user of error
+                toast({
+                    title: "Error",
+                    message: response.error,
+                    classes: ["-red"],
+                    closeable: true,
+                });
             }
         } catch (e) {
             success = false;
@@ -332,7 +351,6 @@ class ControlCenter {
             }
         } catch (e) {
             console.error(e);
-            // TODO: handle desync
         }
     }
 }

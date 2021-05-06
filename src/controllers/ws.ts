@@ -1,4 +1,5 @@
 import cc from "./control-center";
+import { toast } from "@codewithkyle/notifyjs";
 
 let socket;
 
@@ -14,7 +15,13 @@ function reconnect(){
         }
     });
     socket.addEventListener("close", () => {
-        // TODO: notify user they've lost their internet connection
+        toast({
+            title: "Connection Lost",
+            message: "You've lost your connection with the server. Any new changes you make will not be applied until you've reconnected.",
+            classes: ["-yellow"],
+            closeable: true,
+            duration: Infinity,
+        });
         setTimeout(() => {
             reconnect();
         }, 30000);

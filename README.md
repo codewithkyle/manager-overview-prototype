@@ -20,7 +20,6 @@ Exploring the concept of creating a web application using an offline-first CRDT 
     - [x] Soft sync when network becomes available
     - [x] Request soft sync on restart
     - [x] Add etag key to opcode
-- [ ] Hard sync (purge & rebuild datasets) button
 - [x] Dataset integrity checks before preforming operations
 - [ ] Run a batch process every 1,000 operations to normalize the NDJSON file
 
