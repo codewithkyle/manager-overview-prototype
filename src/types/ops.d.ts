@@ -6,6 +6,7 @@ export interface OPCode{
     timestamp: number,
     table: string,
     key: string,
+    etag?: string,
 }
 
 export interface Insert extends OPCode{

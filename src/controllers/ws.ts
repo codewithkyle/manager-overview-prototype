@@ -7,6 +7,7 @@ function reconnect(){
     socket.addEventListener('message', (event) => {
         try {
             const op = JSON.parse(event.data);
+            localStorage.setItem("ledger-etag", op.etag);
             cc.perform(op, true);
         } catch (e) {
             console.error(e, event);

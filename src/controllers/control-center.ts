@@ -139,7 +139,7 @@ class ControlCenter {
     public async perform(operation:OPCode, disbatchToUI = false){
         try {
             // @ts-ignore
-            const { op, id, table, key, value, keypath, timestamp } = operation;
+            const { op, id, table, key, value, keypath, timestamp, etag } = operation;
 
             // Ignore web socket OPs if they originated from this client
             const alreadyInLedger = await new Promise(resolve => {
@@ -232,10 +232,7 @@ class ControlCenter {
 
             // Skip inserts when we already have the data && skip non-insert ops when we don't have the data
             if (existingModel && op === "INSERT" || !existingModel && op !== "INSERT"){
-                return new Promise(resolve => {
-                    // @ts-ignore
-                    resolve();
-                });
+                return;
             }
 
             switch (op){

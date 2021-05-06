@@ -20,8 +20,10 @@ class CommandCenter {
             return;
         }
         this.ops[operation.id] = 1;
+        await this.logOP(operation);
+        const { size, mtimeMs } = await fs.promises.stat(ledgerFile);
+        operation.etag = `${size}-${mtimeMs}`;
         broadcast(operation);
-        this.logOP(operation);
         this.ledger.push(operation);
         this.ledger.sort((a, b) => {
             return a.timestamp - b.timestamp > 0 ? 1 : -1;
@@ -29,9 +31,13 @@ class CommandCenter {
         await this.getOPs(operation);
     }
 
-    async logOP(operation){
-        const stream = fs.createWriteStream(ledgerFile, { flags: 'a' });
-        stream.write(`${JSON.stringify(operation)}\n`);
+    logOP(operation){
+        return new Promise(resolve => {
+            const stream = fs.createWriteStream(ledgerFile, { flags: 'a' });
+            stream.write(`${JSON.stringify(operation)}\n`, () => {
+                resolve();
+            });
+        })
     }
 
     async getOPs(operation){
