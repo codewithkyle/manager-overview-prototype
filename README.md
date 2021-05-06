@@ -14,7 +14,7 @@ Exploring the concept of creating a web application using an offline-first CRDT 
 - [x] Delete tasks
     - [x] Locally
     - [x] Globally
-- [ ] Offline support
+- [x] Offline support
     - [x] Add repeating network checking logic
     - [x] Dispatch local changes when network becomes available
     - [x] Soft sync when network becomes available
