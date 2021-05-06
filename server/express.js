@@ -29,24 +29,16 @@ app.post("/api/v1/op", async (req, res) => {
     }
 });
 
+app.head("/api/v1/ledger", (req, res) => {
+    const { size, mtimeMs } = fs.statSync(ledgerFile);
+    res.set(
+        "ETag", `${size}-${mtimeMs}`
+    ).status(200).send();
+});
+
 app.get("/api/v1/ledger", async (req, res) => {
     try{
         res.status(200).sendFile(ledgerFile);
-    } catch (e) {
-        console.log(e);
-        switch(e){
-            case 401:
-                return res.status(401).json(buildErrorResponse("You are not authorized to perform this action."));
-            default:
-                return res.status(500).json(buildErrorResponse("Server error occurred."));
-        }
-    }
-});
-
-app.head("/api/v1/ledger", async (req, res) => {
-    try{
-        const { size, mtimeMs } = fs.statSync(ledgerFile);
-        res.status(200).header("ETag", `${size}-${mtimeMs}`).send();
     } catch (e) {
         console.log(e);
         switch(e){

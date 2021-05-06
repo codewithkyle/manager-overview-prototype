@@ -39,7 +39,6 @@ export default class Homepage extends SuperComponet<HomepageState>{
     }
 
     private async init(){
-        // TODO: sync data with server
         this.render();
     }
 

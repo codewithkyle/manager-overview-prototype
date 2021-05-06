@@ -22,6 +22,7 @@ const DB_NAME = "application";
 
 class IDBWorker {
     private db:any;
+    private tables: Array<Table>;
 
     constructor(){
         self.onmessage = this.inbox.bind(this);
@@ -31,6 +32,11 @@ class IDBWorker {
     private inbox(e:MessageEvent){
         const { type, uid, data } = e.data;
         switch (type){
+            case "RESET":
+                this.resetIDBTables().then(() => {
+                    this.send("response", null, uid);
+                });
+                break;
             case "FIND":
                 this.find(data).then(output => {
                     this.send("response", output, uid);
@@ -108,6 +114,16 @@ class IDBWorker {
         }
     }
 
+    private async resetIDBTables(){
+        for (const table of this.tables){
+            const rows = await this.db.getAll(table.name);
+            const key = table?.keyPath ?? "id";
+            for (const row of rows){
+                await this.db.delete(table.name, row[key]);
+            }
+        }
+    }
+
     private async unset({ table, key, keypath }){
         keypath = keypath.split("::");
         const data = await this.db.get(table, key);
@@ -149,10 +165,11 @@ class IDBWorker {
         return data;
     }
 
-    private async init(){
+    private async init(announce = true){
         try {
 			const request = await fetch(`/schema.json`);
-			const scheam: Schema = await request.json();
+            const scheam: Schema = await request.json();
+            this.tables = scheam.tables;
 			// @ts-expect-error
 			this.db = await openDB(DB_NAME, scheam.version, {
 				upgrade(db, oldVersion, newVersion, transaction) {
@@ -160,7 +177,6 @@ class IDBWorker {
 					for (let i = 0; i < db.objectStoreNames.length; i++) {
 						db.deleteObjectStore(db.objectStoreNames[i]);
 					}
-
 					for (let i = 0; i < scheam.tables.length; i++) {
 						const table: Table = scheam.tables[i];
 						const options = {
@@ -183,13 +199,15 @@ class IDBWorker {
 					}
 				},
 				blocked() {
-					this.send("error", "This app needs to restart. Close all tabs for this app and before relaunching.");
+					console.error("This app needs to restart. Close all tabs for this app and before relaunching.");
 				},
 				blocking() {
-					this.send("error", "This app needs to restart. Close all tabs for this app before relaunching.");
+					console.error("This app needs to restart. Close all tabs for this app and before relaunching.");
 				},
 			});
-			this.send("ready");
+            if (announce){
+                this.send("ready");
+            }
 		} catch (e) {
 			console.error(e);
 		}

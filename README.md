@@ -17,8 +17,8 @@ Exploring the concept of creating a web application using an offline-first CRDT 
 - [ ] Offline support
     - [x] Add repeating network checking logic
     - [x] Dispatch local changes when network becomes available
-    - [ ] Soft sync when network becomes available
-    - [ ] Request soft sync on restart
+    - [x] Soft sync when network becomes available
+    - [x] Request soft sync on restart
     - [x] Add etag key to opcode
 - [ ] Hard sync (purge & rebuild datasets) button
 - [x] Dataset integrity checks before preforming operations

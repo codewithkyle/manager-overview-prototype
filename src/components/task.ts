@@ -62,7 +62,6 @@ export default class Task extends SuperComponet<ITask>{
                 e.preventDefault();
                 this.updateText = async () => {};
                 const op = await cc.delete("tasks", this.model.uid);
-                console.log(op);
                 await cc.perform(op);
                 cc.disbatch(op);
                 // @ts-ignore

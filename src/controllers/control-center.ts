@@ -9,7 +9,6 @@ class ControlCenter {
     constructor(){
         this.syncing = false;
         createSubscription("sync");
-        this.sync();
         this.flushOutbox();
     }
 
@@ -45,12 +44,74 @@ class ControlCenter {
         }
         this.syncing = true;
         try {
-            // TODO: ingest ledger data
-            // TODO: ingest task data
+            const request = await fetch("/api/v1/ledger", {
+                method: "HEAD",
+            });
+            const incomingETag = request.headers.get("ETag");
+            const localETag = localStorage.getItem("ledger-etag");
+            if (incomingETag !== localETag){
+                await new Promise(resolve => {
+                    idb.send("RESET", null, resolve);
+                });
+                const worker = new Worker("/js/stream-parser-worker.js");
+                let totalOPsInserted = 0;
+                let totalOPs = 0;
+                let waitingToFetchHistory = false;
+                worker.onmessage = async (e:MessageEvent) => {
+                    const { result, type } = e.data;
+                    switch(type){
+                        case "result":
+                            totalOPs++;
+                            const { op, id, table, key, value, keypath, timestamp, etag } = result;
+                            new Promise(resolve => {
+                                idb.send("INSERT", {
+                                    table: "ledger",
+                                    key: id,
+                                    value: result,
+                                }, resolve);
+                            }).then(() => {
+                                totalOPsInserted++;
+                                if (totalOPs === totalOPsInserted && waitingToFetchHistory){
+                                    this.runHistory();
+                                }
+                            });
+                            break;
+                        case "done":
+                            if (totalOPs === totalOPsInserted){
+                                this.runHistory();
+                            } else {
+                                waitingToFetchHistory = true;
+                            }
+                            worker.terminate();
+                            localStorage.setItem("ledger-etag", incomingETag);
+                            break;
+                        default:
+                            break;
+                    }
+                };
+                worker.postMessage({
+                    url: "/api/v1/ledger",
+                });
+            }
         } catch (e) {
             console.error(e);
         }
         this.syncing = false;
+    }
+
+    private async runHistory(){
+        const ops:Array<OPCode> = await new Promise(resolve => {
+            idb.send("SELECT", {
+                table: "ledger",
+            }, resolve);
+        });
+        ops.sort((a, b) => {
+            return a.timestamp - b.timestamp > 0 ? 1 : -1;
+        });
+        for (const op of ops){
+            await this.op(op);
+        }
+        location.reload();
     }
 
     public insert(table:string, key:string, value:any):Insert{
@@ -117,8 +178,7 @@ class ControlCenter {
             const response = await request.json();
             if (!request.ok || !response?.success){
                 console.error(response?.error ?? request.statusText);
-                // TODO: determine the proper server error handling procedure
-                success = false;
+                // TODO: inform user of error
             }
         } catch (e) {
             success = false;
@@ -194,7 +254,6 @@ class ControlCenter {
             }
         } catch (e) {
             console.error(e);
-            // TODO: handle desync
         }
     }
 
