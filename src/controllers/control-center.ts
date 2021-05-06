@@ -32,7 +32,6 @@ class ControlCenter {
             op: "DELETE",
             table: table,
             key: key,
-            tombstone: value,
             timestamp: new Date().getTime(),
         };
     }
@@ -50,14 +49,12 @@ class ControlCenter {
     }
 
     public unset(table:string, key:string, keypath:string):Unset{
-        // TODO: find tombstone value via keypath
         return {
             id: uuid(),
             op: "UNSET",
             table: table,
             key: key,
             keypath: keypath,
-            tombstone: null,
             timestamp: new Date().getTime(),
         };
     }

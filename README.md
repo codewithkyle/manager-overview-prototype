@@ -14,13 +14,16 @@ Exploring the concept of creating a web application using an offline-first CRDT 
 - [x] Delete tasks
     - [x] Locally
     - [x] Globally
-- [ ] Finalize offline support
+- [ ] Offline support
     - [ ] Add repeating network checking logic
     - [ ] Dispatch local changes when network becomes available
     - [ ] Request soft sync when network becomes available
 - [ ] Add initial NDJSON ingest logic on fresh start
-- [ ] Request soft sync when on restart
+- [ ] Request soft sync on restart
 - [ ] Add hard sync (purge & rebuild datasets)
+- [ ] Add dataset integrity checks before preforming operations
+- [x] Remove `tombstone` keys
+- [ ] Fault tolerance
 
 ## Postmortem
 

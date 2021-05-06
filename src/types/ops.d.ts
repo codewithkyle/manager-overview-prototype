@@ -12,9 +12,7 @@ export interface Insert extends OPCode{
     value: any,
 }
 
-export interface Delete extends OPCode{
-    tombstone: any,
-}
+export interface Delete extends OPCode{}
 
 export interface Set extends OPCode{
     keypath: string,
@@ -23,7 +21,6 @@ export interface Set extends OPCode{
 
 export interface Unset extends OPCode{
     keypath: string,
-    tombstone: any,
 }
 
 export interface Batch{
