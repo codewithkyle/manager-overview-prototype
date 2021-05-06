@@ -23,6 +23,15 @@ setInterval(function ping() {
 wss.on('connection', (ws) => {
     ws.isAlive = true;
     ws.on('pong', heartbeat.bind(ws));
+    ws.on("message", (event) => {
+        switch (event){
+            case "ping":
+                ws.send("pong");
+                break;
+            default:
+                break;
+        }
+    });
     clients.push(ws);
 });
 

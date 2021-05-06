@@ -15,8 +15,8 @@ Exploring the concept of creating a web application using an offline-first CRDT 
     - [x] Locally
     - [x] Globally
 - [ ] Offline support
-    - [ ] Add repeating network checking logic
-    - [ ] Dispatch local changes when network becomes available
+    - [x] Add repeating network checking logic
+    - [x] Dispatch local changes when network becomes available
     - [ ] Request soft sync when network becomes available
 - [ ] Add initial NDJSON ingest logic on fresh start
 - [ ] Request soft sync on restart

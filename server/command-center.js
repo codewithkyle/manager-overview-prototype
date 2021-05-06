@@ -4,9 +4,14 @@ const db = require("./db");
 class CommandCenter {
     constructor(){
         this.ledger = [];
+        this.ops = {};
     }
 
     async op(operation){
+        if (operation.id in this.ops){
+            return;
+        }
+        this.ops[operation.id] = 1;
         broadcast(operation);
         this.ledger.push(operation);
         this.ledger.sort((a, b) => {

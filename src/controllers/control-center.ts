@@ -4,9 +4,53 @@ import idb from "./idb-manager";
 import { createSubscription, publish } from "@codewithkyle/pubsub";
 
 class ControlCenter {
+    private syncing: boolean;
 
     constructor(){
+        this.syncing = false;
         createSubscription("sync");
+        this.sync();
+        this.flushOutbox();
+    }
+
+    private async flushOutbox(){
+        const messages:Array<any> = await new Promise(resolve => {
+            idb.send("SELECT", {
+                table: "outbox"
+            }, resolve);
+        });
+        const successes = [];
+        if (messages.length){
+            for (const message of messages){
+                const success = await this.disbatch(message.opcode, true);
+                if (success){
+                    successes.push(message.uid);
+                }
+            }
+        }
+        for (const uid of successes){
+            await new Promise(resolve => {
+                idb.send("DELETE", {
+                    table: "outbox",
+                    key: uid,
+                }, resolve);
+            });
+        }
+        setInterval(this.flushOutbox.bind(this), 30000);
+    }
+
+    public async sync(){
+        if (this.syncing){
+            return;
+        }
+        this.syncing = true;
+        try {
+            // TODO: ingest ledger data
+            // TODO: ingest task data
+        } catch (e) {
+            console.error(e);
+        }
+        this.syncing = false;
     }
 
     public insert(table:string, key:string, value:any):Insert{
@@ -59,7 +103,8 @@ class ControlCenter {
         };
     }
 
-    public async disbatch(op:OPCode){
+    public async disbatch(op:OPCode, bypassOutbox = false){
+        let success = true;
         try{
             const request = await fetch("/api/v1/op", {
                 method: "POST",
@@ -73,11 +118,22 @@ class ControlCenter {
             if (!request.ok || !response?.success){
                 console.error(response?.error ?? request.statusText);
                 // TODO: determine the proper server error handling procedure
+                success = false;
             }
         } catch (e) {
+            success = false;
             console.error(e);
-            // TODO: handle network error by queuing the request
+            if (!bypassOutbox){
+                idb.send("INSERT", {
+                    table: "outbox",
+                    value: {
+                        uid: uuid(),
+                        opcode: op,
+                    },
+                });
+            }
         }
+        return success;
     }
 
     public async perform(operation:OPCode, disbatchToUI = false){
