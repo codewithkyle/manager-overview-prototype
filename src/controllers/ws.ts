@@ -5,7 +5,7 @@ let socket;
 let connected = false;
 
 function reconnect(){
-    socket = new WebSocket('ws://localhost:5002');
+    socket = new WebSocket('ws://167.172.250.33:5004');
     socket.addEventListener('message', (event) => {
         try {
             const op = JSON.parse(event.data);
