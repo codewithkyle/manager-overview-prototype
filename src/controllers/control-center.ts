@@ -162,10 +162,26 @@ class ControlCenter {
         }
     }
 
-    private async op(operation){
+    private async op(operation):Promise<any>{
         try {
             // @ts-ignore
             const { op, id, table, key, value, keypath, timestamp } = operation;
+
+            const existingModel = await new Promise(resolve => {
+                idb.send("GET", {
+                    table: table,
+                    key: key,
+                }, resolve);
+            });
+
+            // Skip inserts when we already have the data && skip non-insert ops when we don't have the data
+            if (existingModel && op === "INSERT" || !existingModel && op !== "INSERT"){
+                return new Promise(resolve => {
+                    // @ts-ignore
+                    resolve();
+                });
+            }
+
             switch (op){
                 case "INSERT":
                     return new Promise((resolve, reject) => {

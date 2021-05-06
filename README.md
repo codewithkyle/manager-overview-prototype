@@ -21,9 +21,8 @@ Exploring the concept of creating a web application using an offline-first CRDT 
 - [ ] Add initial NDJSON ingest logic on fresh start
 - [ ] Request soft sync on restart
 - [ ] Add hard sync (purge & rebuild datasets)
-- [ ] Add dataset integrity checks before preforming operations
+- [x] Add dataset integrity checks before preforming operations
 - [x] Remove `tombstone` keys
-- [ ] Fault tolerance
 
 ## Postmortem
 

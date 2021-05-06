@@ -6,10 +6,14 @@ class Database {
     unset({ op, id, table, key, value, keypath, timestamp }){
         switch (table){
             case "users":
-                this.unsetValueFromKeypath(this.users[key], keypath.split("::"));
+                if (this.users?.[key]){
+                    this.unsetValueFromKeypath(this.users[key], keypath.split("::"));
+                }
                 return;
             case "tasks":
-                this.unsetValueFromKeypath(this.tasks[key], keypath.split("::"));
+                if (this.tasks?.[key]){
+                    this.unsetValueFromKeypath(this.tasks[key], keypath.split("::"));
+                }
                 return;
             default:
                 return;
@@ -18,10 +22,14 @@ class Database {
     set({ op, id, table, key, value, keypath, timestamp }){
         switch (table){
             case "users":
-                this.setValueFromKeypath(this.users[key], keypath.split("::"), value);
+                if (this.users?.[key]){
+                    this.setValueFromKeypath(this.users[key], keypath.split("::"), value);
+                }
                 return;
             case "tasks":
-                this.setValueFromKeypath(this.tasks[key], keypath.split("::"), value);
+                if (this.tasks?.[key]){
+                    this.setValueFromKeypath(this.tasks[key], keypath.split("::"), value);
+                }
                 return;
             default:
                 return;
@@ -58,7 +66,7 @@ class Database {
     setValueFromKeypath(object, keypath, value){
         const key = keypath[0];
         keypath.splice(0, 1);
-        if (keypath.length){
+        if (keypath.length && object?.[key]){
             setValueFromKeypath(object[key], keypath, value);
         } else {
             object[key] = value;
@@ -67,10 +75,12 @@ class Database {
     unsetValueFromKeypath(object, keypath){
         const key = keypath[0];
         keypath.splice(0, 1);
-        if (keypath.length){
+        if (keypath.length && object?.[key]){
             unsetValueFromKeypath(object[key], keypath);
         } else {
-            delete object[key];
+            if (object?.[key]){
+                delete object[key];
+            }
         }
     }
 }
