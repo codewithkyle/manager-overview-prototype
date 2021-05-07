@@ -18,19 +18,7 @@ function reconnect(){
         }
     });
     socket.addEventListener("close", () => {
-        if (connected){
-            toast({
-                title: "Connection Lost",
-                message: "You've lost your connection with the server. Any new changes you make will not be applied until you've reconnected.",
-                classes: ["-yellow"],
-                closeable: true,
-                duration: Infinity,
-            });
-            connected = false;
-        }
-        setTimeout(() => {
-            reconnect();
-        }, 5000);
+        disconnect();
     });
     socket.addEventListener("open", () => {
         connected = true;
@@ -38,3 +26,20 @@ function reconnect(){
     });
 }
 reconnect();
+
+function disconnect(){
+    if (connected){
+        toast({
+            title: "Connection Lost",
+            message: "You've lost your connection with the server. Any new changes you make will not be applied until you've reconnected.",
+            classes: ["-yellow"],
+            closeable: true,
+            duration: Infinity,
+        });
+        connected = false;
+    }
+    setTimeout(() => {
+        reconnect();
+    }, 5000);
+}
+export { connected, disconnect };

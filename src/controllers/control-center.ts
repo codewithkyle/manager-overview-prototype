@@ -3,6 +3,7 @@ import { Delete, Insert, OPCode, Set, Unset } from "../types/ops";
 import idb from "./idb-manager";
 import { createSubscription, publish } from "@codewithkyle/pubsub";
 import { toast } from "@codewithkyle/notifyjs";
+import { disconnect } from "./ws";
 
 class ControlCenter {
     private syncing: boolean;
@@ -245,6 +246,7 @@ class ControlCenter {
                     },
                 });
             }
+            disconnect();
         }
         return success;
     }
