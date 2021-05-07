@@ -36,7 +36,7 @@ class ControlCenter {
                 }, resolve);
             });
         }
-        setInterval(this.flushOutbox.bind(this), 30000);
+        setTimeout(this.flushOutbox.bind(this), 30000);
     }
 
     private async hardSync(incomingETag){

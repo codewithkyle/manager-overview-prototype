@@ -30,7 +30,7 @@ function reconnect(){
         }
         setTimeout(() => {
             reconnect();
-        }, 30000);
+        }, 5000);
     });
     socket.addEventListener("open", () => {
         connected = true;
