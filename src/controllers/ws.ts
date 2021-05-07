@@ -5,11 +5,13 @@ let socket;
 let connected = false;
 
 function reconnect(){
+    // socket = new WebSocket('ws://localhost:5004');
     socket = new WebSocket('ws://167.172.250.33:5004');
     socket.addEventListener('message', (event) => {
         try {
             const op = JSON.parse(event.data);
             localStorage.setItem("ledger-etag", op.etag);
+            localStorage.setItem("last-op-id", op.id);
             cc.perform(op, true);
         } catch (e) {
             console.error(e, event);

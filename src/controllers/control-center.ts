@@ -39,6 +39,76 @@ class ControlCenter {
         setInterval(this.flushOutbox.bind(this), 30000);
     }
 
+    private async hardSync(incomingETag){
+        await new Promise(resolve => {
+            idb.send("RESET", null, resolve);
+        });
+        const worker = new Worker("/js/stream-parser-worker.js");
+        let totalOPsInserted = 0;
+        let totalOPs = 0;
+        let waitingToFetchHistory = false;
+        worker.onmessage = async (e:MessageEvent) => {
+            const { result, type } = e.data;
+            switch(type){
+                case "result":
+                    totalOPs++;
+                    const { op, id, table, key, value, keypath, timestamp, etag } = result;
+                    new Promise(resolve => {
+                        idb.send("INSERT", {
+                            table: "ledger",
+                            key: id,
+                            value: result,
+                        }, resolve);
+                    }).then(() => {
+                        totalOPsInserted++;
+                        if (totalOPs === totalOPsInserted && waitingToFetchHistory){
+                            this.runHistory();
+                        }
+                    });
+                    break;
+                case "done":
+                    if (totalOPs === totalOPsInserted){
+                        this.runHistory();
+                    } else {
+                        waitingToFetchHistory = true;
+                    }
+                    worker.terminate();
+                    localStorage.setItem("ledger-etag", incomingETag);
+                    break;
+                default:
+                    break;
+            }
+        };
+        worker.postMessage({
+            url: "/api/v1/ledger",
+        });
+    }
+
+    private async softSync(id, incomingETag){
+        const request = await fetch(`/api/v1/sync?id=${id}`, {
+            headers: new Headers({
+                Accept: "application/json"
+            }),
+        });
+        const response = await request.json();
+        if (response?.success && request.ok){
+            for (const op of response.data){
+                await this.perform(op, true);
+                localStorage.setItem("ledger-etag", op.etag);
+                localStorage.setItem("last-op-id", op.id);
+            }
+            toast({
+                title: "Synchronization Complete",
+                message: "Your local data has been successfully synced with the server.",
+                classes: ["-green"],
+                closeable: true,
+                duration: Infinity,
+            });
+        } else {
+            await this.hardSync(incomingETag);
+        }
+    }
+
     public async sync(){
         if (this.syncing){
             return;
@@ -51,55 +121,18 @@ class ControlCenter {
             const incomingETag = request.headers.get("ETag");
             const localETag = localStorage.getItem("ledger-etag");
             if (incomingETag !== localETag){
-                console.log(localETag, incomingETag);
                 toast({
                     title: "Synchronization",
                     message: "Your local data is outdated and will be synchronized. You may notice the UI changing or updating while the synchronization is in progress.",
                     classes: ["-yellow"],
                     closeable: true,
                 });
-                await new Promise(resolve => {
-                    idb.send("RESET", null, resolve);
-                });
-                const worker = new Worker("/js/stream-parser-worker.js");
-                let totalOPsInserted = 0;
-                let totalOPs = 0;
-                let waitingToFetchHistory = false;
-                worker.onmessage = async (e:MessageEvent) => {
-                    const { result, type } = e.data;
-                    switch(type){
-                        case "result":
-                            totalOPs++;
-                            const { op, id, table, key, value, keypath, timestamp, etag } = result;
-                            new Promise(resolve => {
-                                idb.send("INSERT", {
-                                    table: "ledger",
-                                    key: id,
-                                    value: result,
-                                }, resolve);
-                            }).then(() => {
-                                totalOPsInserted++;
-                                if (totalOPs === totalOPsInserted && waitingToFetchHistory){
-                                    this.runHistory();
-                                }
-                            });
-                            break;
-                        case "done":
-                            if (totalOPs === totalOPsInserted){
-                                this.runHistory();
-                            } else {
-                                waitingToFetchHistory = true;
-                            }
-                            worker.terminate();
-                            localStorage.setItem("ledger-etag", incomingETag);
-                            break;
-                        default:
-                            break;
-                    }
-                };
-                worker.postMessage({
-                    url: "/api/v1/ledger",
-                });
+                const lastOPID = localStorage.getItem("last-op-id");
+                if (lastOPID){
+                    await this.softSync(lastOPID, incomingETag);
+                } else {
+                    await this.hardSync(incomingETag);
+                }                
             }
         } catch (e) {
             console.error(e);

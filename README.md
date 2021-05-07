@@ -21,7 +21,12 @@ Exploring the concept of creating a web application using an offline-first CRDT 
     - [x] Request soft sync on restart
     - [x] Add etag key to opcode
 - [x] Dataset integrity checks before preforming operations
-- [x] Run a batch process every 100 operations to normalize the NDJSON file
+- [x] Run a batch process every 10000 operations to normalize the NDJSON file
+- [x] Log the normalize timestamp and block any request made before the normalization
+- [x] Refactor ledger for faster resyncs
+    - [x] Ledger holds operations in the order in which they arrive
+    - [x] Clients hold the last recieved operation id in `localStorage`
+    - [x] Add an endpoint that accepts an operation id & returns an array of (future) operations or `404` when users last op was before the last normalization process
 
 ## Postmortem
 

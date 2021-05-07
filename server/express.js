@@ -40,8 +40,24 @@ app.get("/api/v1/ledger", async (req, res) => {
     try{
         res.status(200).sendFile(ledgerFile);
     } catch (e) {
-        console.log(e);
         switch(e){
+            case 401:
+                return res.status(401).json(buildErrorResponse("You are not authorized to perform this action."));
+            default:
+                return res.status(500).json(buildErrorResponse("Server error occurred."));
+        }
+    }
+});
+
+app.get("/api/v1/sync", async (req, res) => {
+    try{
+        const { id } = req.query;
+        const data = CommandCenter.getOPsById(id);
+        res.status(200).json(buildSuccessResponse(data));
+    } catch (e) {
+        switch(e){
+            case 404:
+                return res.status(404).json(buildErrorResponse("Operations are out of bounds due to data normalization."));
             case 401:
                 return res.status(401).json(buildErrorResponse("You are not authorized to perform this action."));
             default:

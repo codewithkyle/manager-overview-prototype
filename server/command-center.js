@@ -17,24 +17,22 @@ class CommandCenter {
         fs.writeFileSync(ledgerFile, "");
         this.opsSinceLastNormalize = 0;
         this.normalizing = false;
+        this.lastNormalizeTimestamp = 0;
     }
 
     async op(operation){
-        if (operation.id in this.ops){
+        if (operation.id in this.ops || operation.timestamp <= this.lastNormalizeTimestamp){
             return;
         }
-        this.opsSinceLastNormalize++;
         this.ops[operation.id] = 1;
         await this.logOP(operation);
         const { size, mtimeMs } = await fs.promises.stat(ledgerFile);
         operation.etag = `${size}-${mtimeMs}`;
-        broadcast(operation);
         this.ledger.push(operation);
-        this.ledger.sort((a, b) => {
-            return a.timestamp - b.timestamp > 0 ? 1 : -1;
-        });
+        broadcast(operation);
         await this.getOPs(operation);
-        if (this.opsSinceLastNormalize >= 100){
+        this.opsSinceLastNormalize++;
+        if (this.opsSinceLastNormalize >= 10000){
             this.normalize();
         }
     }
@@ -42,7 +40,8 @@ class CommandCenter {
     async normalize(){
         this.normalizing = true;
         this.opsSinceLastNormalize = 0;
-        this.ledger.splice(0, this.ledger.length - 1);
+        this.lastNormalizeTimestamp = new Date().getTime();
+        this.ledger.splice(0, this.ledger.length);
         if (fs.existsSync(tempLedgerFile)){
             await fs.promises.unlink(tempLedgerFile);
         }
@@ -60,7 +59,7 @@ class CommandCenter {
                 table: "tasks",
                 key: task.uid,
                 value: task,
-                timestamp: 0,
+                timestamp: this.lastNormalizeTimestamp,
             });
         }
         for (let i = 0; i < ops.length; i++){
@@ -88,9 +87,29 @@ class CommandCenter {
         });
     }
 
+    getOPsById(id){
+        let index = -1;
+        let output = [];
+        for (let i = this.ledger.length - 1; i >= 0; i--){
+            if (this.ledger[i].id === id){
+                index = i + 1;
+                break;
+            }
+        }
+        if (index === -1){
+            throw 404;
+        } else {
+            output = this.ledger.slice(index, this.ledger.length);
+        }
+        return output;
+    }
+
     async getOPs(operation){
         const { op, id, table, key, value, keypath, timestamp } = operation;
         const history = [...this.ledger];
+        history.sort((a, b) => {
+            return a.timestamp - b.timestamp > 0 ? 1 : -1;
+        });
         let startAtIndex = null;
         for (let i = history.length - 1; i >= 0; i--){
             if (startAtIndex === null && history[i].timestamp === timestamp){
