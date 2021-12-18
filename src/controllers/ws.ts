@@ -4,10 +4,10 @@ import { toast } from "@codewithkyle/notifyjs";
 let socket;
 let connected = false;
 
-function reconnect(){
+function reconnect() {
     // socket = new WebSocket('ws://localhost:5004');
-    socket = new WebSocket('ws://167.172.250.33:5004');
-    socket.addEventListener('message', (event) => {
+    socket = new WebSocket("ws://ws.crdt2.codewithkyle.com");
+    socket.addEventListener("message", (event) => {
         try {
             const op = JSON.parse(event.data);
             localStorage.setItem("ledger-etag", op.etag);
@@ -27,11 +27,12 @@ function reconnect(){
 }
 reconnect();
 
-function disconnect(){
-    if (connected){
+function disconnect() {
+    if (connected) {
         toast({
             title: "Connection Lost",
-            message: "You've lost your connection with the server. Any new changes you make will not be applied until you've reconnected.",
+            message:
+                "You've lost your connection with the server. Any new changes you make will not be applied until you've reconnected.",
             classes: ["-yellow"],
             closeable: true,
             duration: Infinity,
