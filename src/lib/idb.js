@@ -1,26 +1,31 @@
-const instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
+const instanceOfAny = (object, constructors) =>
+    constructors.some((c) => object instanceof c);
 
 let idbProxyableTypes;
 let cursorAdvanceMethods;
 // This is a function to prevent it throwing up in node environments.
 function getIdbProxyableTypes() {
-    return (idbProxyableTypes ||
+    return (
+        idbProxyableTypes ||
         (idbProxyableTypes = [
             IDBDatabase,
             IDBObjectStore,
             IDBIndex,
             IDBCursor,
             IDBTransaction,
-        ]));
+        ])
+    );
 }
 // This is a function to prevent it throwing up in node environments.
 function getCursorAdvanceMethods() {
-    return (cursorAdvanceMethods ||
+    return (
+        cursorAdvanceMethods ||
         (cursorAdvanceMethods = [
             IDBCursor.prototype.advance,
             IDBCursor.prototype.continue,
             IDBCursor.prototype.continuePrimaryKey,
-        ]));
+        ])
+    );
 }
 const cursorRequestMap = new WeakMap();
 const transactionDoneMap = new WeakMap();
@@ -30,8 +35,8 @@ const reverseTransformCache = new WeakMap();
 function promisifyRequest(request) {
     const promise = new Promise((resolve, reject) => {
         const unlisten = () => {
-            request.removeEventListener('success', success);
-            request.removeEventListener('error', error);
+            request.removeEventListener("success", success);
+            request.removeEventListener("error", error);
         };
         const success = () => {
             resolve(wrap(request.result));
@@ -41,19 +46,19 @@ function promisifyRequest(request) {
             reject(request.error);
             unlisten();
         };
-        request.addEventListener('success', success);
-        request.addEventListener('error', error);
+        request.addEventListener("success", success);
+        request.addEventListener("error", error);
     });
     promise
         .then((value) => {
-        // Since cursoring reuses the IDBRequest (*sigh*), we cache it for later retrieval
-        // (see wrapFunction).
-        if (value instanceof IDBCursor) {
-            cursorRequestMap.set(value, request);
-        }
-        // Catching to avoid "Uncaught Promise exceptions"
-    })
-        .catch(() => { });
+            // Since cursoring reuses the IDBRequest (*sigh*), we cache it for later retrieval
+            // (see wrapFunction).
+            if (value instanceof IDBCursor) {
+                cursorRequestMap.set(value, request);
+            }
+            // Catching to avoid "Uncaught Promise exceptions"
+        })
+        .catch(() => {});
     // This mapping exists in reverseTransformCache but doesn't doesn't exist in transformCache. This
     // is because we create many promises from a single IDBRequest.
     reverseTransformCache.set(promise, request);
@@ -61,25 +66,24 @@ function promisifyRequest(request) {
 }
 function cacheDonePromiseForTransaction(tx) {
     // Early bail if we've already created a done promise for this transaction.
-    if (transactionDoneMap.has(tx))
-        return;
+    if (transactionDoneMap.has(tx)) return;
     const done = new Promise((resolve, reject) => {
         const unlisten = () => {
-            tx.removeEventListener('complete', complete);
-            tx.removeEventListener('error', error);
-            tx.removeEventListener('abort', error);
+            tx.removeEventListener("complete", complete);
+            tx.removeEventListener("error", error);
+            tx.removeEventListener("abort", error);
         };
         const complete = () => {
             resolve();
             unlisten();
         };
         const error = () => {
-            reject(tx.error || new DOMException('AbortError', 'AbortError'));
+            reject(tx.error || new DOMException("AbortError", "AbortError"));
             unlisten();
         };
-        tx.addEventListener('complete', complete);
-        tx.addEventListener('error', error);
-        tx.addEventListener('abort', error);
+        tx.addEventListener("complete", complete);
+        tx.addEventListener("error", error);
+        tx.addEventListener("abort", error);
     });
     // Cache it for later retrieval.
     transactionDoneMap.set(tx, done);
@@ -88,14 +92,16 @@ let idbProxyTraps = {
     get(target, prop, receiver) {
         if (target instanceof IDBTransaction) {
             // Special handling for transaction.done.
-            if (prop === 'done')
-                return transactionDoneMap.get(target);
+            if (prop === "done") return transactionDoneMap.get(target);
             // Polyfill for objectStoreNames because of Edge.
-            if (prop === 'objectStoreNames') {
-                return target.objectStoreNames || transactionStoreNamesMap.get(target);
+            if (prop === "objectStoreNames") {
+                return (
+                    target.objectStoreNames ||
+                    transactionStoreNamesMap.get(target)
+                );
             }
             // Make tx.store return the only store in the transaction, or undefined if there are many.
-            if (prop === 'store') {
+            if (prop === "store") {
                 return receiver.objectStoreNames[1]
                     ? undefined
                     : receiver.objectStore(receiver.objectStoreNames[0]);
@@ -109,8 +115,10 @@ let idbProxyTraps = {
         return true;
     },
     has(target, prop) {
-        if (target instanceof IDBTransaction &&
-            (prop === 'done' || prop === 'store')) {
+        if (
+            target instanceof IDBTransaction &&
+            (prop === "done" || prop === "store")
+        ) {
             return true;
         }
         return prop in target;
@@ -123,11 +131,16 @@ function wrapFunction(func) {
     // Due to expected object equality (which is enforced by the caching in `wrap`), we
     // only create one new func per func.
     // Edge doesn't support objectStoreNames (booo), so we polyfill it here.
-    if (func === IDBDatabase.prototype.transaction &&
-        !('objectStoreNames' in IDBTransaction.prototype)) {
+    if (
+        func === IDBDatabase.prototype.transaction &&
+        !("objectStoreNames" in IDBTransaction.prototype)
+    ) {
         return function (storeNames, ...args) {
             const tx = func.call(unwrap(this), storeNames, ...args);
-            transactionStoreNamesMap.set(tx, storeNames.sort ? storeNames.sort() : [storeNames]);
+            transactionStoreNamesMap.set(
+                tx,
+                storeNames.sort ? storeNames.sort() : [storeNames]
+            );
             return wrap(tx);
         };
     }
@@ -151,12 +164,10 @@ function wrapFunction(func) {
     };
 }
 function transformCachableValue(value) {
-    if (typeof value === 'function')
-        return wrapFunction(value);
+    if (typeof value === "function") return wrapFunction(value);
     // This doesn't return, it just creates a 'done' promise for the transaction,
     // which is later returned for transaction.done (see idbObjectHandler).
-    if (value instanceof IDBTransaction)
-        cacheDonePromiseForTransaction(value);
+    if (value instanceof IDBTransaction) cacheDonePromiseForTransaction(value);
     if (instanceOfAny(value, getIdbProxyableTypes()))
         return new Proxy(value, idbProxyTraps);
     // Return the same value back if we're not going to transform it.
@@ -165,12 +176,10 @@ function transformCachableValue(value) {
 function wrap(value) {
     // We sometimes generate multiple promises from a single IDBRequest (eg when cursoring), because
     // IDB is weird and a single IDBRequest can yield many responses, so these can't be cached.
-    if (value instanceof IDBRequest)
-        return promisifyRequest(value);
+    if (value instanceof IDBRequest) return promisifyRequest(value);
     // If we've already transformed this value before, reuse the transformed value.
     // This is faster, but it also provides object equality.
-    if (transformCache.has(value))
-        return transformCache.get(value);
+    if (transformCache.has(value)) return transformCache.get(value);
     const newValue = transformCachableValue(value);
     // Not all types are transformed.
     // These may be primitive types, so they can't be WeakMap keys.
@@ -189,24 +198,31 @@ const unwrap = (value) => reverseTransformCache.get(value);
  * @param version Schema version.
  * @param callbacks Additional callbacks.
  */
-function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
+function openDB(
+    name,
+    version,
+    { blocked, upgrade, blocking, terminated } = {}
+) {
     const request = indexedDB.open(name, version);
     const openPromise = wrap(request);
     if (upgrade) {
-        request.addEventListener('upgradeneeded', (event) => {
-            upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction));
+        request.addEventListener("upgradeneeded", (event) => {
+            upgrade(
+                wrap(request.result),
+                event.oldVersion,
+                event.newVersion,
+                wrap(request.transaction)
+            );
         });
     }
-    if (blocked)
-        request.addEventListener('blocked', () => blocked());
+    if (blocked) request.addEventListener("blocked", () => blocked());
     openPromise
         .then((db) => {
-        if (terminated)
-            db.addEventListener('close', () => terminated());
-        if (blocking)
-            db.addEventListener('versionchange', () => blocking());
-    })
-        .catch(() => { });
+            if (terminated) db.addEventListener("close", () => terminated());
+            if (blocking)
+                db.addEventListener("versionchange", () => blocking());
+        })
+        .catch(() => {});
     return openPromise;
 }
 /**
@@ -216,54 +232,61 @@ function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) 
  */
 function deleteDB(name, { blocked } = {}) {
     const request = indexedDB.deleteDatabase(name);
-    if (blocked)
-        request.addEventListener('blocked', () => blocked());
+    if (blocked) request.addEventListener("blocked", () => blocked());
     return wrap(request).then(() => undefined);
 }
 
-const readMethods = ['get', 'getKey', 'getAll', 'getAllKeys', 'count'];
-const writeMethods = ['put', 'add', 'delete', 'clear'];
+const readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
+const writeMethods = ["put", "add", "delete", "clear"];
 const cachedMethods = new Map();
 function getMethod(target, prop) {
-    if (!(target instanceof IDBDatabase &&
-        !(prop in target) &&
-        typeof prop === 'string')) {
+    if (
+        !(
+            target instanceof IDBDatabase &&
+            !(prop in target) &&
+            typeof prop === "string"
+        )
+    ) {
         return;
     }
-    if (cachedMethods.get(prop))
-        return cachedMethods.get(prop);
-    const targetFuncName = prop.replace(/FromIndex$/, '');
+    if (cachedMethods.get(prop)) return cachedMethods.get(prop);
+    const targetFuncName = prop.replace(/FromIndex$/, "");
     const useIndex = prop !== targetFuncName;
     const isWrite = writeMethods.includes(targetFuncName);
     if (
-    // Bail if the target doesn't exist on the target. Eg, getAll isn't in Edge.
-    !(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) ||
-        !(isWrite || readMethods.includes(targetFuncName))) {
+        // Bail if the target doesn't exist on the target. Eg, getAll isn't in Edge.
+        !(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) ||
+        !(isWrite || readMethods.includes(targetFuncName))
+    ) {
         return;
     }
     const method = async function (storeName, ...args) {
         // isWrite ? 'readwrite' : undefined gzipps better, but fails in Edge :(
-        const tx = this.transaction(storeName, isWrite ? 'readwrite' : 'readonly');
+        const tx = this.transaction(
+            storeName,
+            isWrite ? "readwrite" : "readonly"
+        );
         let target = tx.store;
-        if (useIndex)
-            target = target.index(args.shift());
+        if (useIndex) target = target.index(args.shift());
         // Must reject if op rejects.
         // If it's a write operation, must reject if tx.done rejects.
         // Must reject with op rejection first.
         // Must resolve with op value.
         // Must handle both promises (no unhandled rejections)
-        return (await Promise.all([
-            target[targetFuncName](...args),
-            isWrite && tx.done,
-        ]))[0];
+        return (
+            await Promise.all([
+                target[targetFuncName](...args),
+                isWrite && tx.done,
+            ])
+        )[0];
     };
     cachedMethods.set(prop, method);
     return method;
 }
 replaceTraps((oldTraps) => ({
     ...oldTraps,
-    get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
-    has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop),
+    get: (target, prop, receiver) =>
+        getMethod(target, prop) || oldTraps.get(target, prop, receiver),
+    has: (target, prop) =>
+        !!getMethod(target, prop) || oldTraps.has(target, prop),
 }));
-
-export { deleteDB, openDB, unwrap, wrap };

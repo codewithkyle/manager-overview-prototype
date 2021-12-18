@@ -6,7 +6,7 @@ let connected = false;
 
 function reconnect() {
     // socket = new WebSocket('ws://localhost:5004');
-    socket = new WebSocket("ws://ws.crdt2.codewithkyle.com");
+    socket = new WebSocket("ws://162.196.23.237:5004");
     socket.addEventListener("message", (event) => {
         try {
             const op = JSON.parse(event.data);
