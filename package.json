@@ -1,40 +1,45 @@
 {
-  "dependencies": {
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "ws": "^7.4.5"
-  },
-  "devDependencies": {
-    "@codewithkyle/notifyjs": "^3.1.0",
-    "@codewithkyle/pubsub": "^1.1.0",
-    "@codewithkyle/router": "^1.0.0",
-    "@codewithkyle/supercomponent": "^1.0.0",
-    "@codewithkyle/twist": "^1.0.1",
-    "brixi": "^0.3.3",
-    "cssmonster": "^0.3.1",
-    "esbuild": "^0.11.14",
-    "esinstall": "^1.1.4",
-    "glob": "^7.1.6",
-    "idb": "^6.0.0",
-    "lit-html": "^1.3.0",
-    "npm-run-all": "^4.1.5",
-    "uuid": "^8.3.2"
-  },
-  "bundle": [
-    "@codewithkyle/supercomponent",
-    "@codewithkyle/router",
-    "@codewithkyle/pubsub",
-    "@codewithkyle/notifyjs",
-    "lit-html",
-    "idb",
-    "uuid"
-  ],
-  "scripts": {
-    "bundle": "node ./build/bundle.js",
-    "build": "npm-run-all build:*",
-    "build:js": "twist --src=./src --outdir=./public/js --config=./esbuild.config.js",
-    "build:css": "cssmonster",
-    "brixi": "brixi && mv ./brixi/brixi.css ./src/globals/brixi.css && rmdir ./brixi",
-    "server": "node ./server/express.js"
-  }
+    "dependencies": {
+        "body-parser": "^1.19.1",
+        "express": "^4.17.2",
+        "ws": "^7.5.6"
+    },
+    "devDependencies": {
+        "@codewithkyle/notifyjs": "^3.1.0",
+        "@codewithkyle/pubsub": "^1.1.0",
+        "@codewithkyle/router": "^1.1.0",
+        "@codewithkyle/supercomponent": "^1.3.0",
+        "@codewithkyle/twist": "^1.5.0",
+        "brixi": "^0.3.3",
+        "cssmonster": "^0.3.1",
+        "esbuild": "^0.11.23",
+        "esinstall": "^1.1.7",
+        "glob": "^7.2.0",
+        "idb": "^6.1.5",
+        "lit-html": "^1.4.1",
+        "npm-run-all": "^4.1.5",
+        "uuid": "^8.3.2"
+    },
+    "bundle": [
+        "@codewithkyle/supercomponent",
+        "@codewithkyle/router",
+        "@codewithkyle/pubsub",
+        "@codewithkyle/notifyjs",
+        "lit-html",
+        "idb",
+        "uuid"
+    ],
+    "scripts": {
+        "bundle": "node ./build/bundle.js",
+        "build": "npm-run-all build:*",
+        "build:js": "twist --src=./src --outdir=./public/js --config=./esbuild.config.js",
+        "build:css": "cssmonster",
+        "brixi": "brixi && mv ./brixi/brixi.css ./src/globals/brixi.css && rmdir ./brixi",
+        "server": "node ./server/express.js",
+        "deploy": "run-s deploy:*",
+        "deploy:pre": "npm run build",
+        "deploy:claim": "ssh ubuntu@192.168.1.104 sudo chown -R ubuntu:ubuntu /var/www/manager-overview/",
+        "deploy:deploy": "rsync -azh --delete-after -e \"ssh -o StrictHostKeyChecking=no\" ./ ubuntu@192.168.1.104:/var/www/manager-overview/",
+        "deploy:reboot": "ssh ubuntu@192.168.1.104 /home/ubuntu/.nvm/versions/node/v16.13.1/bin/pm2 restart 1"
+    }
 }
